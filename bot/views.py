@@ -10,7 +10,7 @@ from telebot import types
 from emoji import emojize
 
 from .models import TelegramUser
-#from .models import Task
+from .models import Task
 
 # Bot token
 TOKEN = 'TOKEN'
@@ -20,7 +20,6 @@ bot = TeleBot(TOKEN)
 
 # Modules
 user = TelegramUser() # Telegram Users Module
-#task = Task() # Tasks for users Module
 
 # Emojis
 grin = emojize(':grin:', use_aliases = True)
@@ -28,6 +27,9 @@ slightly_smilling_face = emojize(':slightly_smiling_face:', use_aliases = True)
 
 # Telegram user (for checking of exsisting)
 tguser = None
+
+# User's task
+task = None
 
 # For reading response text from telegram server
 class UpdateBot(APIView):
@@ -55,6 +57,8 @@ def help(message):
 	text = f'What can I do for you {slightly_smilling_face}? Check some functions {grin}'
 	bot.send_message(message.chat.id, text, reply_markup=key)
 
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback(call):
 	try:
@@ -63,11 +67,11 @@ def callback(call):
 		tguser = TelegramUser.objects.filter(user_id = call.message.chat.id).first()
 		if tguser:
 			tguser.user_id = tguser.user_id
-			tguser.user_name = tguser.user_name
-			tguser.user_password = tguser.user_password
+			tguser.name = tguser.name
+			tguser.password = tguser.password
 			tguser.loginned = tguser.loginned
-			text = f'id: {tguser.user_id}\tname: {tguser.user_name}\n'
-			text += f'password: {tguser.user_password}\tloginned: {tguser.loginned}'
+			text = f'id: {tguser.user_id}\tname: {tguser.name}\n'
+			text += f'password: {tguser.password}\tloginned: {tguser.loginned}'
 			text += '\n----------------\n' 
 			print(text)
 		if call.message:
@@ -120,7 +124,7 @@ def sign_up_username(message):
 			msg = bot.reply_to(message, "Enter your TELEGRAM username")
 			bot.register_next_step_handler(msg, sign_up_username)
 		else:
-			user.user_name = message.text
+			user.name = message.text
 			msg = bot.reply_to(message, "Great! Now enter your new password")
 			bot.register_next_step_handler(msg, sign_up_password)
 	except Exception as e:
@@ -129,7 +133,7 @@ def sign_up_username(message):
 
 def sign_up_password(message):
 	try:
-		user.user_password = message.text
+		user.password = message.text
 		msg = bot.reply_to(message, "OK! Confirm your password")
 		bot.register_next_step_handler(msg, sign_up_confirm_password)
 	except Exception as e:
@@ -138,7 +142,7 @@ def sign_up_password(message):
 
 def sign_up_confirm_password(message):
 	try:
-		if message.text != user.user_password:
+		if message.text != user.password:
 			msg = bot.reply_to(message, "Password unconfirmed! Try again!")
 			bot.register_next_step_handler(msg, sign_up_confirm_password)
 		else:
@@ -154,7 +158,7 @@ def sign_up_confirm_password(message):
 # Sign In
 def sign_in_username(message):
 	try:
-		if message.text != tguser.user_name:
+		if message.text != tguser.name:
 			msg = bot.reply_to(message, "Enter your TELEGRAM username")
 			bot.register_next_step_handler(msg, sign_in_username)
 		else:
@@ -166,7 +170,7 @@ def sign_in_username(message):
 
 def sign_in_password(message):
 	try:
-		if message.text != tguser.user_password:
+		if message.text != tguser.password:
 			msg = bot.reply_to(message, "Incorrected password! Try again:")
 			bot.register_next_step_handler(msg, sign_in_password)
 		else:
@@ -178,12 +182,7 @@ def sign_in_password(message):
 		print(repr(e))
 
 
-
-# Webhook
-#bot.set_webhook(url="https://myapp.pythonanywhere.com/" + TOKEN)
-
 bot.enable_save_next_step_handlers()
 bot.load_next_step_handlers()
 
-bot.remove_webhook()
 bot.polling()

@@ -1,5 +1,5 @@
 # practicebot
-## Telegram bot with Django back-end*
+## Telegram bot with Django back-end
 
 ### Description:
 * Python version: 3.8.1
@@ -16,7 +16,7 @@ password: adminpassword
 
 **Now you can:** 
 * register, login and logout from telegram bot
-* creat tasks, appoint them to users, update and delete them
+* create tasks, appoint them to users, update and delete them
 * change user's information, update and delete it
 
 **Issues (in development):**

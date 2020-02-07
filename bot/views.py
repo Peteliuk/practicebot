@@ -13,7 +13,7 @@ from .models import TelegramUser
 from .models import Task
 
 # Bot token
-TOKEN = 'Say my name ))'
+TOKEN = 'TOKEN'
 
 # Bot
 bot = TeleBot(TOKEN)
@@ -34,9 +34,9 @@ class UpdateBot(APIView):
 # Start command
 @bot.message_handler(commands=['start', 'Start'])
 def start(message):
-	# if user_id field equals None, telegram user isn't signed in
-	# if user_id field equals telegram user's id, he or she is signed in
-	tguser = TelegramUser.objects.filter(user_id=message.from_user.id).first()
+	# if tg_id field equals None, telegram user isn't signed in
+	# if tg_id field equals telegram user's id, he or she is signed in
+	tguser = TelegramUser.objects.filter(tg_id=message.from_user.id).first()
 	if tguser:
 		text = f'Hello {message.from_user.first_name}, how are you? {slightly_smiling_face}\n'
 		text += 'To see more information, type "/help" or "/Help"'
@@ -55,10 +55,11 @@ def help(message):
 # Sign In
 def sign_in_username(message):
 	try:
+		global tguser
 		tguser = TelegramUser.objects.filter(login=message.text).first()
 		if tguser:
 			msg = bot.reply_to(message, "Great! Now enter your password:")
-			bot.register_next_step_handler(msg, lambda m: sign_in_password(m, tguser))
+			bot.register_next_step_handler(msg, sign_in_password)
 		else:
 			msg = bot.reply_to(message, "Incorrect login! Try again:")
 			bot.register_next_step_handler(msg, sign_in_username)
@@ -66,10 +67,10 @@ def sign_in_username(message):
 		bot.reply_to(message, 'some error')
 		print(repr(e))
 
-def sign_in_password(message, tguser):
+def sign_in_password(message):
 	try:
 		if message.text == tguser.password:
-			tguser.user_id = message.from_user.id
+			tguser.tg_id = message.from_user.id
 			tguser.save()
 			bot.send_message(message.chat.id, f'Congratulation! You\'re signed in {grin}')
 		else:
@@ -80,7 +81,5 @@ def sign_in_password(message, tguser):
 		print(repr(e))
 
 
-bot.enable_save_next_step_handlers()
+bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
-
-#bot.polling()

@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 class TelegramUser(models.Model):
-	user_id = models.CharField(max_length=200, null=True, blank=True)
+	tg_id = models.CharField(max_length=200, null=True, blank=True)
 	login = models.CharField(max_length=200, unique=True)
 	password = models.CharField(max_length=200)
 
@@ -15,7 +15,7 @@ class Task(models.Model):
 	description = models.TextField(default='No description')
 	date = models.DateTimeField(default=timezone.now)
 	user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
-	acceed = models.BooleanField(default=False)
+	acceed = models.BooleanField(null=True, blank=True, default=None)
 	complited = models.BooleanField(default=False)
 	
 	def __str__(self):

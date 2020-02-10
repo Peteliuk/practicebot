@@ -104,13 +104,13 @@ def callback(call):
 		if command == 'reject':
 			task.acceed = False			
 			task.save()
-			text = f'Task <i>{task.name}</i> rejected!'
+			text = f'Task <i>{task.name}</i> {x} rejected!'
 			bot.delete_message(call.message.chat.id, call.message.message_id)
 			bot.send_message(call.message.chat.id, text, parse_mode='HTML')
 		elif command == 'accept':
 			task.acceed = True
 			task.save()
-			text = f'Task <i>{task.name}</i> acepted!'
+			text = f'Task <i>{task.name}</i> {white_check_mark} acepted!'
 			bot.delete_message(call.message.chat.id, call.message.message_id)
 			bot.send_message(call.message.chat.id, text, parse_mode='HTML')
 		else:
@@ -119,11 +119,10 @@ def callback(call):
 # Sign In
 def sign_in_username(message):
 	try:
-		global tguser
 		tguser = TelegramUser.objects.filter(login=message.text).first()
 		if tguser:
 			msg = bot.reply_to(message, "Great! Now enter your password:")
-			bot.register_next_step_handler(msg, sign_in_password)
+			bot.register_next_step_handler(msg, sign_in_password, tguser)
 		else:
 			msg = bot.reply_to(message, "Incorrect login! Try again:")
 			bot.register_next_step_handler(msg, sign_in_username)
@@ -131,7 +130,7 @@ def sign_in_username(message):
 		bot.reply_to(message, 'some error')
 		print(repr(e))
 
-def sign_in_password(message):
+def sign_in_password(message, tguser):
 	try:
 		if message.text == tguser.password:
 			tguser.tg_id = message.from_user.id
@@ -139,7 +138,7 @@ def sign_in_password(message):
 			bot.send_message(message.chat.id, f'Congratulation! You\'re signed in {grin}')
 		else:
 			msg = bot.reply_to(message, "Incorrected password! Try again:")
-			bot.register_next_step_handler(msg, sign_in_password)
+			bot.register_next_step_handler(msg, sign_in_password, tguser)
 	except Exception as e:
 		bot.reply_to(message, 'some error')
 		print(repr(e))

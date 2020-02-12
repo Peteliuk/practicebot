@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 class TelegramUser(models.Model):
-	tg_id = models.CharField(max_length=200, null=True, blank=True)
+	tg_id = models.CharField(max_length=200, blank=True, default='')
 	login = models.CharField(max_length=200, unique=True)
 	password = models.CharField(max_length=200)
 

@@ -200,10 +200,10 @@ def show_tasks(chat_id, text, func, user_id):
     """
     tasks = func(user_id)
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True, row_width=5)
-    buttons = []
-    for el in tasks:
-        buttons.append(types.KeyboardButton(text=f'{el.id}'))
-    markup.add(*buttons)
+    markup.add(*[types.KeyboardButton(text=f'{el.id}') for el in tasks])
+    if not tasks:
+        text = f'{sign_of_the_horns} no tasks'
+        markup = types.ReplyKeyboardRemove()
     cache['markup'] = markup
     bot.send_message(chat_id=chat_id, text=text, reply_markup=markup)
 

@@ -1,3 +1,5 @@
+from django.contrib.auth.hashers import check_password
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -111,7 +113,8 @@ def choose_task(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.row(
         types.KeyboardButton(text=f'{x} reject {task.id}'),
-        types.KeyboardButton(text=f'{white_check_mark} accept {task.id}')
+        types.KeyboardButton(text=f'{white_check_mark} accept {task.id}'),
+        types.KeyboardButton(text='undo'),
     )
     # Dont show `reject` and `accept` buttons if task has not None status
     if task.status != 1:
@@ -121,10 +124,10 @@ def choose_task(message):
 
 
 # Update chosen task
-@bot.message_handler(func=lambda msg: msg.text.split()[1] in ['reject', 'accept'])
+@bot.message_handler(regexp='(reject)|(accept)')
 def update_chosen_task(message):
     """
-    Handle messages what second word is `reject` or 'accept'.
+    Handle messages what text is `reject` or 'accept'.
     Message text structure: `emoji command task_id`
     Status variants:
         1: None
@@ -137,6 +140,12 @@ def update_chosen_task(message):
     if command == 'reject':
         return change_task_status(message.chat.id, f'Rejected {x}', task_id, 2)
     change_task_status(message.chat.id, f'Accepted {white_check_mark}', task_id, 3)
+
+
+# Undo button
+@bot.message_handler(func=lambda msg: msg.text == 'undo')
+def undo(message):
+    bot.send_message(message.chat.id, message.text, reply_markup=cache.get('markup'))
 
 
 # Sign In
@@ -164,7 +173,7 @@ def sign_in_password(message, user_id):
     """
     try:
         tguser = um().get_tguser(user_id)
-        if message.text != tguser.password:
+        if not check_password(message.text, tguser.password):
             return autorize(message.chat.id, "Incorrect password! Try again:",
                             sign_in_password, user_id
                             )
@@ -225,5 +234,4 @@ def change_task_status(chat_id, text, task_id, task_status):
 bot.enable_save_next_step_handlers()
 bot.load_next_step_handlers()
 
-# for localhost (delete it if you want to deploy)
-bot.polling(none_stop=True)
+# bot.polling(none_stop=True)

@@ -7,9 +7,9 @@ from .models import Task
 
 
 class TelegramUserAdmin(admin.ModelAdmin):
-    list_display = ('login', 'password', 'tg_id', 'tasks_num')
-    search_fields = ('login',)
-    readonly_fields = ['tg_id', 'tasks_num']
+    list_display = ('email', 'password', 'telegram_id', 'tasks_num')
+    search_fields = ('email',)
+    readonly_fields = ['password', 'telegram_id', 'tasks_num']
 
     def tasks_num(self, obj):
         return obj.task_set.count()

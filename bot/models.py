@@ -1,27 +1,34 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
+from django.utils.crypto import get_random_string
+from django.core.mail import send_mail
 
 
 class TelegramUser(models.Model):
-    tg_id = models.CharField(max_length=200, default='')
-    login = models.CharField(max_length=200, unique=True)
+    telegram_id = models.CharField(max_length=100, default='')
+    email = models.EmailField(unique=True)
     password = models.CharField(max_length=200)
 
-    def hash_password(self, row):
-        self.password = make_password(row)
-
     def __str__(self):
-        return self.login
+        return self.email
 
     def save(self, *args, **kwargs):
-        self.hash_password(self.password)
+        self.password = get_random_string()
+        send_mail(
+            'BVBlogic practice bot',
+            f'Your authorization data:\n\temail: {self.email}\n\tpassword: {self.password}',
+            'l1999peteliuk@gmail.com',
+            [f'{self.email}'],
+            fail_silently=False,
+        )
+        self.password = make_password(self.password)
         super().save(*args, **kwargs)
 
 
 class Task(models.Model):
     STATUS_VARIANTS = [
-        (1, None),
+        (1, 'created'),
         (2, 'rejected'),
         (3, 'accepted'),
         (4, 'completed'),

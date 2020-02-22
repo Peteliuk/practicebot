@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
+from bot.constants import emojis
 
 
 class TelegramUser(models.Model):
@@ -29,9 +30,9 @@ class TelegramUser(models.Model):
 class Task(models.Model):
     STATUS_VARIANTS = [
         (1, 'created'),
-        (2, 'rejected'),
-        (3, 'accepted'),
-        (4, 'completed'),
+        (2, f'{emojis.x} rejected'),
+        (3, f'{emojis.white_check_mark} accepted'),
+        (4, f'{emojis.sign_of_the_horns} completed'),
     ]
 
     name = models.CharField(max_length=300)

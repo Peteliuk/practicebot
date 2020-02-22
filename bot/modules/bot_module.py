@@ -9,35 +9,17 @@ from telebot import TeleBot
 from telebot import types
 from telebot import logger
 
-from emoji import emojize
-
 from .user_module import UserModule as um
 from .task_module import TaskModule as tm
 
-# Bot token
-TOKEN = 'TOKEN'
+from bot.constants import strings
+from bot.constants import emojis
 
 # Bot
-bot = TeleBot(TOKEN, threaded=False)
+bot = TeleBot(strings.TOKEN, threaded=False)
 
 # Outputs debug messages to console.
 logger.setLevel(logging.DEBUG)
-
-# Emojis
-grin = emojize(':grin:', use_aliases=True)
-slightly_smiling_face = emojize(':slightly_smiling_face:', use_aliases=True)
-x = emojize(':x:', use_aliases=True)
-white_check_mark = emojize(':white_check_mark:', use_aliases=True)
-sign_of_the_horns = emojize(':sign_of_the_horns:', use_aliases=True)
-confused = emojize(':confused:', use_aliases=True)
-
-# Status values
-status_values = {
-    '1': 'None',
-    '2': f'{x} rejected',
-    '3': f'{white_check_mark} accepted',
-    '4': f'{sign_of_the_horns} completed'
-}
 
 
 # For reading response text from telegram server
@@ -51,8 +33,8 @@ class UpdateBot(APIView):
 
 
 # Start command
-@bot.message_handler(commands=['start', 'Start'])
-def start_cmd(message):
+@bot.message_handler(commands=strings.start_cmd)
+def start_command(message):
     """
     if telegram_id field equals None, telegram user isn't signed in.
     if telegram_id field equals telegram user's id, he or she is signed in
@@ -64,14 +46,14 @@ def start_cmd(message):
             bot.reply_to(message, 'To use bot, enter your email first'),
             sign_in_email,
         )
-    text = f'Hello {message.from_user.first_name}, how are you? {slightly_smiling_face}\n' \
+    text = f'Hello {message.from_user.first_name}, how are you? {emojis.slightly_smiling_face}\n' \
            'To see more information, type "/help" or "/Help"'
     bot.send_message(message.chat.id, text)
 
 
 # Help command
-@bot.message_handler(commands=['help', 'Help'])
-def help_cmd(message):
+@bot.message_handler(commands=strings.help_cmd)
+def help_command(message):
     text = "<b>BVBlogic Bot</b> - telegram bot for practice in <i>BVBlogic company</i>\n" \
            "You can watch your tasks. To do this, type /tasks command\n\n" \
            "developed by <a href='https://t.me/liubomyr'>Liubomyr Peteliuk</a> \n" \
@@ -80,8 +62,8 @@ def help_cmd(message):
 
 
 # Tasks command
-@bot.message_handler(commands=['tasks', 'Tasks'])
-def tasks_cmd(message):
+@bot.message_handler(commands=strings.tasks_cmd)
+def tasks_command(message):
     user = um().get_telegram_user(telegram_id=message.from_user.id)
     if not user:
         return bot.register_next_step_handler(
@@ -97,10 +79,16 @@ def tasks_cmd(message):
 
 
 # Remove keyboard command
-@bot.message_handler(commands=['rmkeyboard'])
-def rmkeyboard_cmd(message):
+@bot.message_handler(commands=strings.remove_keyboard_cmd)
+def remove_keyboard_command(message):
     markup = types.ReplyKeyboardRemove()
     bot.send_message(message.chat.id, text='Keyboard removed', reply_markup=markup)
+
+
+# Unknown command
+@bot.message_handler(func=lambda msg: True)
+def unknown_command(message):
+    bot.send_message(message.chat.id, f'Unknown command {emojis.confused}')
 
 
 # Show information about chosen task
@@ -109,12 +97,12 @@ def choose_task(message):
     task = tm().get_task(message.text)
     text = f"<b>Name:</b>\t<i>{task.name}</i>\n\n" \
            f"<b>Description:</b>\n<i>{task.description}</i>\n\n" \
-           f"<b>Date</b>\t<i>{task.date.strftime('%d-%B-%Y')}</i>\n\n" \
-           f"<b>Status</b>: <i>{status_values.get(str(task.status))}</i>"
+           f"<b>Date</b>\t<i>{task.date.strftime('%d %B %Y')}</i>\n\n" \
+           f"<b>Status</b>: <i>{task.get_status_display()}</i>"
     markup = types.InlineKeyboardMarkup()
     markup.row(
-        types.InlineKeyboardButton(f'{x} reject {task.id}', callback_data=f'reject {task.id}'),
-        types.InlineKeyboardButton(f'{white_check_mark} accept {task.id}', callback_data=f'accept {task.id}'),
+        types.InlineKeyboardButton(f'{emojis.x} reject {task.id}', callback_data=f'reject {task.id}'),
+        types.InlineKeyboardButton(f'{emojis.white_check_mark} accept {task.id}', callback_data=f'accept {task.id}'),
     )
     # Dont show `reject` and `accept` buttons if task has not `created` status
     if task.status != 1:
@@ -125,39 +113,33 @@ def choose_task(message):
 
 
 # Show future tasks
-@bot.callback_query_handler(func=lambda call: 'future tasks' in call.data)
+@bot.callback_query_handler(func=lambda call: strings.future_tasks in call.data)
 def show_future_tasks(call):
     user = um().get_telegram_user(telegram_id=call.message.chat.id)
     show_tasks(call.message.chat.id, call.message.message_id, 'Future tasks are showed', tm().get_future_tasks, user.id)
 
 
 # Show past tasks
-@bot.callback_query_handler(func=lambda call: 'past tasks' in call.data)
+@bot.callback_query_handler(func=lambda call: strings.past_tasks in call.data)
 def show_past_tasks(call):
     user = um().get_telegram_user(telegram_id=call.message.chat.id)
     show_tasks(call.message.chat.id, call.message.message_id, 'Past tasks are showed', tm().get_past_tasks, user.id)
 
 
 # Reject task
-@bot.callback_query_handler(func=lambda call: 'reject' in call.data)
+@bot.callback_query_handler(func=lambda call: strings.reject in call.data)
 def reject_task(call):
     task_id = int(call.data.split()[1])
     tm().set_task_status(task_id, 2)
-    bot.edit_message_text(f'Rejected {x}', call.message.chat.id, call.message.message_id)
+    bot.edit_message_text(f'Rejected {emojis.x}', call.message.chat.id, call.message.message_id)
 
 
 # Accept task
-@bot.callback_query_handler(func=lambda call: 'accept' in call.data)
+@bot.callback_query_handler(func=lambda call: strings.reject in call.data)
 def accept_task(call):
     task_id = int(call.data.split()[1])
     tm().set_task_status(task_id, 3)
-    bot.edit_message_text(f'Accepted {white_check_mark}', call.message.chat.id, call.message.message_id)
-
-
-# Unknown command
-@bot.message_handler(func=lambda msg: True)
-def unknown_cmd(message):
-    bot.send_message(message.chat.id, f'Unknown command {confused}')
+    bot.edit_message_text(f'Accepted {emojis.white_check_mark}', call.message.chat.id, call.message.message_id)
 
 
 # Sign In
@@ -195,14 +177,14 @@ def sign_in_password(message, user_id):
             sign_in_password, user.id,
         )
     um().set_telegram_user_telegram_id(user_id, message.from_user.id)
-    bot.send_message(message.chat.id, f'Congratulation! You\'re signed in {grin}')
+    bot.send_message(message.chat.id, f'Congratulation! You\'re signed in {emojis.grin}')
 
 
 # Check if message text is task id
 def message_text_is_task_id(msg):
     user = um().get_telegram_user(telegram_id=msg.from_user.id)
     if not user:
-        return False
+        return
     tasks_ids_list = tm().get_all_tasks_ids_list(user.id)
     return msg.text in tasks_ids_list
 
@@ -219,7 +201,7 @@ def show_tasks(chat_id, message_id, text, func, user_id):
     """
     tasks = func(user_id)
     if not tasks:
-        return bot.send_message(chat_id, f'{sign_of_the_horns} no tasks')
+        return bot.send_message(chat_id, f'{emojis.sign_of_the_horns} no tasks')
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True, row_width=5)
     markup.add(*[types.KeyboardButton(text=f'{el.id}') for el in tasks])
     bot.delete_message(chat_id, message_id)

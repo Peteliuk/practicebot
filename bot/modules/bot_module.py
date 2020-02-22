@@ -85,12 +85,6 @@ def remove_keyboard_command(message):
     bot.send_message(message.chat.id, text='Keyboard removed', reply_markup=markup)
 
 
-# Unknown command
-@bot.message_handler(func=lambda msg: True)
-def unknown_command(message):
-    bot.send_message(message.chat.id, f'Unknown command {emojis.confused}')
-
-
 # Show information about chosen task
 @bot.message_handler(func=lambda msg: message_text_is_task_id(msg))
 def choose_task(message):
@@ -101,8 +95,10 @@ def choose_task(message):
            f"<b>Status</b>: <i>{task.get_status_display()}</i>"
     markup = types.InlineKeyboardMarkup()
     markup.row(
-        types.InlineKeyboardButton(f'{emojis.x} reject {task.id}', callback_data=f'reject {task.id}'),
-        types.InlineKeyboardButton(f'{emojis.white_check_mark} accept {task.id}', callback_data=f'accept {task.id}'),
+        types.InlineKeyboardButton(f'{emojis.x} reject {task.id}', callback_data=f'{strings.reject} {task.id}'),
+        types.InlineKeyboardButton(f'{emojis.white_check_mark} accept {task.id}',
+                                   callback_data=f'{strings.accept} {task.id}'
+                                   ),
     )
     # Dont show `reject` and `accept` buttons if task has not `created` status
     if task.status != 1:
@@ -110,6 +106,12 @@ def choose_task(message):
     msg = bot.send_message(message.chat.id, 'Wait...', reply_markup=types.ReplyKeyboardRemove())
     bot.delete_message(message.chat.id, msg.message_id)
     bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=markup)
+
+
+# Unknown command
+@bot.message_handler(func=lambda msg: True)
+def unknown_command(message):
+    bot.send_message(message.chat.id, f'Unknown command {emojis.confused}')
 
 
 # Show future tasks
@@ -135,7 +137,7 @@ def reject_task(call):
 
 
 # Accept task
-@bot.callback_query_handler(func=lambda call: strings.reject in call.data)
+@bot.callback_query_handler(func=lambda call: strings.accept in call.data)
 def accept_task(call):
     task_id = int(call.data.split()[1])
     tm().set_task_status(task_id, 3)

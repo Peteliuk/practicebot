@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import make_password
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from bot.constants import emojis
+from .tasks import send_notification
 
 
 class TelegramUser(models.Model):
@@ -43,3 +44,10 @@ class Task(models.Model):
 
     def __str__(self):
         return f'{self.name} for {self.user} on {self.date}'
+
+    def save(self, *args, **kwargs):
+        if self.user.telegram_id and self.status == 4:
+            send_notification(self.user.telegram_id, f'<b>Task: {self.name} {self.get_status_display()}!</b>')
+        if self.user.telegram_id and self.status != 4:
+            send_notification(self.user.telegram_id, '<b>You\'ve received new task!</b>')
+        super().save(*args, **kwargs)

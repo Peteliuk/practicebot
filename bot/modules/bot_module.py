@@ -108,6 +108,13 @@ def choose_task(message):
     bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=markup)
 
 
+# Back command
+@bot.message_handler(func=lambda msg: strings.back in msg.text)
+def back_command(message):
+    bot.delete_message(message.chat.id, message.message_id)
+    tasks_command(message)
+
+
 # Unknown command
 @bot.message_handler(func=lambda msg: True)
 def unknown_command(message):
@@ -205,7 +212,9 @@ def show_tasks(chat_id, message_id, text, func, user_id):
     if not tasks:
         return bot.send_message(chat_id, f'{emojis.sign_of_the_horns} no tasks')
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True, row_width=5)
-    markup.add(*[types.KeyboardButton(text=f'{el.id}') for el in tasks])
+    markup.add(*[types.KeyboardButton(text=f'{el.id}') for el in tasks],
+               types.KeyboardButton(text=f'{emojis.arrow_left} {strings.back}'),
+               )
     bot.delete_message(chat_id, message_id)
     bot.send_message(chat_id, text, reply_markup=markup)
 

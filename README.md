@@ -17,6 +17,7 @@ Before using project you must have install some modules:
 * [**pyTelegramBotApi**](https://pypi.org/project/pyTelegramBotAPI/) (necessarily, last version necessarily)
 * [**Django**](https://pypi.org/project/Django/) (necessarily, last version recommended)
 * [**Django Rest Framework**](https://pypi.org/project/djangorestframework/) (necessarily for this project)
+* [**Emoji**](https://pypi.org/project/emoji/) (necessarily for this project)
 
 ### Usage:
 Download this project by `git clone` command in your terminal or download it from this page and extract it.
@@ -36,3 +37,4 @@ Download this project by `git clone` command in your terminal or download it fro
 * sign in from telegram bot
 * create tasks for users and change its information
 * see tasks from telegram bot and accept or reject them
+* receive notifications when your task is created or completed

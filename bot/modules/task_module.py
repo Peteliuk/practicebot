@@ -58,6 +58,4 @@ class TaskModule(Task):
         :param task_id:     task's id
         :param status:      task's status (int)
         """
-        task = Task.objects.get(id=task_id)
-        task.status = status
-        task.save()
+        Task.objects.filter(id=task_id).update(status=status)

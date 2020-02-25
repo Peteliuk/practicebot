@@ -1,11 +1,7 @@
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password
-from django.utils.crypto import get_random_string
-from django.core.mail import send_mail
 
 from bot.constants import emojis
-from .tasks import send_notification
 from .managers import TaskManager
 from .managers import TelegramUserManager
 
@@ -19,18 +15,6 @@ class TelegramUser(models.Model):
 
     def __str__(self):
         return self.email
-
-    def save(self, *args, **kwargs):
-        self.password = get_random_string()
-        send_mail(
-            'BVBlogic practice bot',
-            f'Your authorization data:\n\temail: {self.email}\n\tpassword: {self.password}',
-            'l1999peteliuk@gmail.com',
-            [f'{self.email}'],
-            fail_silently=False,
-        )
-        self.password = make_password(self.password)
-        super().save(*args, **kwargs)
 
 
 class Task(models.Model):
@@ -51,10 +35,3 @@ class Task(models.Model):
 
     def __str__(self):
         return f'{self.name} for {self.user} on {self.date}'
-
-    def save(self, *args, **kwargs):
-        if self.user.telegram_id and self.status == 4:
-            send_notification(self.user.telegram_id, f'<b>Task: {self.name} {self.get_status_display()}!</b>')
-        if self.user.telegram_id and self.status == 1:
-            send_notification(self.user.telegram_id, f'<b>You\'ve received new task!\nName:\t</b>{self.name}')
-        super().save(*args, **kwargs)

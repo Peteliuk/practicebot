@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from bot.modules.bot_module import bot
+from bot.bot import bot
 
 
 class Command(BaseCommand):
